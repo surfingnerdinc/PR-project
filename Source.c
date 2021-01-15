@@ -5,15 +5,14 @@
 #include <math.h>
 #include <time.h>
 #include <stdbool.h>
-
-
-#define THREADS 4			
+		
 
 
 int main(int argc, char* argv[]) {
 	
 	//moje
 	clock_t start, stop;
+	
 
 	
 	int beginOfRange, endOfRange;
@@ -23,6 +22,25 @@ int main(int argc, char* argv[]) {
 
 	printf("Set end of range \n");
 	scanf("%d", &endOfRange);
+
+
+	int THREADS;
+	printf("Set amount of threads (1-4)\n");
+	scanf("%d", &THREADS);
+
+	switch (THREADS)
+	{
+		case 1: THREADS = 1;
+		break;
+		case 2: THREADS = 2;
+			break;
+		case 3: THREADS = 3;
+			break;
+		case 4: THREADS = 4;
+			break;
+		default: printf("errpr\n");
+			break;
+	}
 
 
 	int mysqrt = (int)sqrt(endOfRange);
@@ -92,7 +110,6 @@ int main(int argc, char* argv[]) {
 
 	//wykre�lanie liczb, liczbami parzystymi
 	end_of_range = endOfRange / 2;
-	printf("%d", end_of_range);
 #pragma omp parallel for shared(divTab,end_of_range) private(col_index, row_index, i) schedule(static,32)
 	for (i = 2; i <= end_of_range; i++) {
 		col_index = 2 * i % matrixColumn;
