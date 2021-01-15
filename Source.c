@@ -1,4 +1,15 @@
-﻿#define _CRT_SECURE_NO_DEPRECATE
+﻿/*
+	Przedmiot: Przetwarzanie równoległe - laboratoria
+	Autorzy: Marcin Dubinski i Adam Olech
+	Nr albumów: 133825, 1426913
+	
+	Projekt: Znajdowanie liczb piewszych z zadanego przedziału
+			zastosowane podejscie z podzialem zbioru liczb pierwszych uzywanych do usuwania liczb zlozonych. 
+			Podejście domenowe - procesy otrzymują fragmenty tablicy wykreśleń i całą tablicę liczb pierwszych (do pierwsiatka z konca zakresu). 
+*/
+
+
+#define _CRT_SECURE_NO_DEPRECATE
 #include <stdlib.h>
 #include <stdio.h>
 #include <omp.h>
@@ -20,6 +31,9 @@ int main(int argc, char* argv[]) {
 
 	printf("Set end of range \n");
 	scanf("%d", &endOfRange);
+
+	//beginOfRange = 75000000;
+	//endOfRange = 100000000;
 
 	int THREADS;
 	printf("Set amount of threads (1-4)\n");
@@ -65,7 +79,7 @@ int main(int argc, char* argv[]) {
 	start = clock();
 
 	//szukanie liczb pierwszych w zakresie od 2..sqrt(n)
-	for (i = 2; i <= mysqrt; i++) {
+	for (i = beginOfRange; i <= mysqrt; i++) {
 		for (int j = 2; j <= i; j++) {
 			if (i % j == 0)
 			{
@@ -81,6 +95,8 @@ int main(int argc, char* argv[]) {
 	}
 
 
+
+	//Oznaczenie liczb w tablicy jako parzyste i nieparzyste. 
 	omp_set_num_threads(THREADS);
 #pragma omp parallel for shared(divTab, matrixRow, matrixColumn) private(i,j) schedule(dynamic,512)
 	for (i = 0; i < matrixRow; i++) {
@@ -139,20 +155,22 @@ int main(int argc, char* argv[]) {
 
 	int save_to_xls;
 	printf("\n\nDo you want save and see prime numbers?\n");
-	printf("Type 1 for yest \n");
+	printf("Type 1 for yes => .XLS file \n");
+	printf("Type 2 for yes => .TXT file \n");
 	scanf("%d", &save_to_xls);
 
 
 
 	//Zmienne potrzebne do zapisywanie wynikow do pliku xls. 
 	FILE* excel_file;
-	char filename[17] = "primeCounter.xls\0";
+	char filename_xls[17] = "primeCounter.xls\0";
+	char filename_txt[17] = "primeCounter.txt\0";
 	int temporary = 0;
 
 	switch (save_to_xls)
 	{
 	case 1: 
-		excel_file = fopen(filename, "w"); //flaga W otwiera plik w trybie nadpisywania - jednoczesnie usuwajac stare dane. 
+		excel_file = fopen(filename_xls, "w"); //flaga W otwiera plik w trybie nadpisywania - jednoczesnie usuwajac stare dane. 
 		fprintf(excel_file, "Prime counter: %d, App was running at: %fs. Was used: %d thread(s)\n", primeCounter, ((double)(stop - start) / 1000.0), THREADS);
 		for (i = 0; i < matrixRow; i++) {
 			for (j = 0; j < matrixColumn; j++) {
@@ -163,7 +181,21 @@ int main(int argc, char* argv[]) {
 				}
 			}
 		}
-		printf("Successfully saved to %s\n", filename);
+		printf("Successfully saved %s\n", filename_xls);
+		break;
+	case 2:
+		excel_file = fopen(filename_txt, "w"); //flaga W otwiera plik w trybie nadpisywania - jednoczesnie usuwajac stare dane. 
+		fprintf(excel_file, "Prime counter: %d, App was running at: %fs. Was used: %d thread(s)\n", primeCounter, ((double)(stop - start) / 1000.0), THREADS);
+		for (i = 0; i < matrixRow; i++) {
+			for (j = 0; j < matrixColumn; j++) {
+				if (divTab[j][i] == 1) {
+					if (temporary % 10 == 0)fprintf(excel_file, "\n");
+					fprintf(excel_file, "%d, \t", matrixColumn * i + j);
+					temporary++;
+				}
+			}
+		}
+		printf("Successfully saved %s\n", filename_txt);
 		break;
 	default:
 		return EXIT_SUCCESS;
